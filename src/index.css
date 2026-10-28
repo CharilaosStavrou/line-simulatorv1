@@ -650,3 +650,139 @@ rect.stateDown {
 .stateBlockedText {
   fill: var(--colorText);
 }
+
+/* Animation */
+
+.animationControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.buttonAccent {
+  border-color: var(--colorAccent);
+  color: var(--colorAccent);
+  font-weight: 600;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--colorLine);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmented button {
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-left: 1px solid var(--colorBorder);
+  background: var(--colorBackground);
+  cursor: pointer;
+}
+
+.segmented button:first-child {
+  border-left: 0;
+}
+
+.segmented button.segmentActive {
+  background: var(--colorAccent);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.counterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 32px;
+  margin-bottom: 8px;
+}
+
+.counter {
+  display: flex;
+  flex-direction: column;
+}
+
+.counterValue {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.lineViewScroll {
+  overflow-x: auto;
+}
+
+.lineView {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+}
+
+.lineView .flowLine {
+  stroke: var(--colorBorder);
+  stroke-width: 2;
+}
+
+.lineView .endBox,
+.lineView .bufferBox {
+  fill: var(--colorSurface);
+  stroke: var(--colorBorder);
+  stroke-dasharray: 4 3;
+}
+
+.lineView rect.stationBox {
+  stroke: var(--colorLine);
+  stroke-width: 1.5;
+}
+
+.lineView .viewLabel {
+  fill: var(--colorText);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lineView .viewSmall {
+  fill: var(--colorTextMuted);
+  font-size: 12px;
+}
+
+.lineView .viewSmall.stateBusyText,
+.lineView .viewSmall.stateDownText {
+  fill: #ffffff;
+  font-weight: 600;
+}
+
+.lineView .viewSmall.stateStarvedText,
+.lineView .viewSmall.stateBlockedText {
+  fill: var(--colorText);
+  font-weight: 600;
+}
+
+.lineView .viewLarge {
+  fill: var(--colorText);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.partSquare {
+  fill: var(--colorLine);
+  stroke: #ffffff;
+  stroke-width: 1;
+  transition: transform var(--glide, 0ms) ease-out;
+}
+
+.legendSwatch.legendPart {
+  width: 10px;
+  height: 10px;
+  background: var(--colorLine);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partSquare {
+    transition: none;
+  }
+}

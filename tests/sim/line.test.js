@@ -75,3 +75,58 @@ describe('simulateLine progress', () => {
     expect(withProgress).toEqual(simulateLine(model))
   })
 })
+
+describe('stepping for the animation', () => {
+  const model = buildModel({
+    stations: [[triangular(2, 3, 5), 120, 20], [exponential(4)], [constant(3.5), 300, 30]],
+    buffers: [2, 0],
+    source: { type: 'interarrival', interarrivalTime: exponential(5) },
+    warmupHours: 5,
+    simulationHours: 50,
+  })
+
+  it('gives exactly the same results when advanced in many small steps', () => {
+    const line = createLineSimulation(model)
+    let time = 0
+    while (time < line.endTime) {
+      time += 0.37 // like animation frames of arbitrary length
+      line.runUntil(time)
+    }
+    expect(line.getResults()).toEqual(simulateLine(model))
+  })
+
+  it('gives the same results when stepped one event at a time', () => {
+    const line = createLineSimulation(model)
+    while (line.step()) {
+      // one event per call
+    }
+    line.runUntil(line.endTime)
+    expect(line.getResults()).toEqual(simulateLine(model))
+  })
+
+  it('snapshots account for every part in the system', () => {
+    const line = createLineSimulation(model)
+    for (let time = 30; time <= line.endTime; time += 30) {
+      line.runUntil(time)
+      const snapshot = line.getSnapshot()
+      const onStations = snapshot.stations.filter((station) => station.partId !== null).length
+      const inBuffers = snapshot.buffers.reduce((sum, buffer) => sum + buffer.count, 0)
+      expect(onStations + inBuffers + snapshot.inputQueue.count).toBe(snapshot.wip)
+      expect(snapshot.time).toBe(time)
+      snapshot.buffers.forEach((buffer) => expect(buffer.count).toBeLessThanOrEqual(buffer.capacity))
+      snapshot.stations.forEach((station) => {
+        if (station.state === 'busy' || station.state === 'blocked') expect(station.partId).not.toBeNull()
+        if (station.state === 'starved') expect(station.partId).toBeNull()
+      })
+    }
+    const ids = line.getSnapshot().buffers.flatMap((buffer) => buffer.partIds)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('counts finished parts from time 0', () => {
+    const line = createLineSimulation(buildModel({ stations: [[constant(10)]], warmupHours: 1, simulationHours: 2 }))
+    line.runUntil(line.endTime)
+    expect(line.getSnapshot().finished).toBe(12)
+    expect(line.getResults().partsFinished).toBe(6)
+  })
+})

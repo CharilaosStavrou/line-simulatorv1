@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AnimationPanel from './components/AnimationPanel.jsx'
 import CapacityNotice from './components/CapacityNotice.jsx'
 import Header from './components/Header.jsx'
 import LineEditor from './components/LineEditor.jsx'
@@ -27,6 +28,7 @@ function App() {
       <Header model={model} onChange={setModel} />
       <main className="appMain">
         <LineEditor model={model} onChange={setModel} />
+        <AnimationPanel model={model} />
         <CapacityNotice model={model} />
         <RunPanel
           status={simulation.status}

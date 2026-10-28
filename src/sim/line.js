@@ -79,6 +79,7 @@ export function createLineSimulation(model, options = {}) {
   const last = stations.length - 1
   let nextPartId = 1
   let wipCount = 0
+  let finishedCount = 0 // since time 0, for the animation counters
   const stats = createLineStatistics({ stations: model.stations, buffers })
 
   function newPart() {
@@ -113,6 +114,7 @@ export function createLineSimulation(model, options = {}) {
     if (i === last) {
       stats.recordExit(takePart(station), engine.now)
       wipCount--
+      finishedCount++
       return true
     }
     const buffer = buffers[i]
@@ -259,6 +261,23 @@ export function createLineSimulation(model, options = {}) {
     },
     getResults() {
       return stats.summary(engine.now)
+    },
+    // Current state of the line for the animation. Part lists are cut to
+    // maxParts entries (front of the queue first); counts are complete.
+    getSnapshot(maxParts = 50) {
+      const ids = (parts) => parts.slice(0, maxParts).map((part) => part.id)
+      return {
+        time: engine.now,
+        stations: stations.map((station) => ({ state: stationState(station), partId: station.part?.id ?? null })),
+        buffers: buffers.map((buffer) => ({
+          capacity: buffer.capacity,
+          count: buffer.parts.length,
+          partIds: ids(buffer.parts),
+        })),
+        inputQueue: { count: inputQueue.length, partIds: ids(inputQueue) },
+        wip: wipCount,
+        finished: finishedCount,
+      }
     },
   }
 }
