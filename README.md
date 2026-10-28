@@ -1,5 +1,7 @@
 # Production Line Simulator
 
+**[Live demo](https://line-simulatorv1.vercel.app)**
+
 A discrete-event simulation (DES) of a serial production line, running in the browser. It models variable processing times, finite buffers, blocking and random machine breakdowns. You can watch the line run in an animated view driven by the simulation engine itself, and get results with 95% confidence intervals from independent replications.
 
 The simulation engine is written from scratch in plain JavaScript and validated against queueing theory (M/M/1, Little's law, availability, a two-station blocking model). It is the fourth tool in a series on production engineering, moving from formulas to simulation.
