@@ -69,9 +69,8 @@ select {
 
 .appHeader {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 16px 32px;
+  flex-direction: column;
+  gap: 12px;
   padding: 14px 24px;
   border-bottom: 1px solid var(--colorLine);
 }
@@ -785,4 +784,129 @@ rect.stateDown {
   .partSquare {
     transition: none;
   }
+}
+
+/* Header toolbar */
+
+.headerTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.fileToolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 640px;
+}
+
+.toolbarButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Confidence intervals and tooltips */
+
+.confidenceValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoTip {
+  position: relative;
+  display: inline-flex;
+}
+
+.infoButton {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--colorTextMuted);
+  border-radius: 50%;
+  background: var(--colorBackground);
+  color: var(--colorTextMuted);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  cursor: help;
+}
+
+.tipText {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  z-index: 10;
+  width: 280px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--colorText);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.infoTip:hover .tipText,
+.infoTip:focus-within .tipText {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Scenarios */
+
+.scenarioForm {
+  display: flex;
+  gap: 6px;
+}
+
+.scenarioForm input {
+  width: 200px;
+  height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--colorBorder);
+  border-radius: 4px;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.comparisonTable {
+  margin-top: 0;
+}
+
+.comparisonTable thead th {
+  white-space: nowrap;
+}
+
+.comparisonTable thead th .iconButton {
+  margin-left: 6px;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.scenarioName {
+  color: var(--colorText);
+  font-size: 13px;
 }

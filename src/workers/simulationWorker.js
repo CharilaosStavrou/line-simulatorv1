@@ -2,13 +2,14 @@
 // Message in:  { model }
 // Messages out: { type: 'progress', fraction } | { type: 'result', result }
 //               | { type: 'error', message }
+// The result is the summary of settings.replications replications.
 
-import { simulateLine } from '../sim/line.js'
+import { runReplications } from '../sim/replications.js'
 
 self.onmessage = (event) => {
   const { model } = event.data
   try {
-    const result = simulateLine(model, {
+    const result = runReplications(model, {
       onProgress: (fraction) => self.postMessage({ type: 'progress', fraction }),
     })
     self.postMessage({ type: 'result', result })

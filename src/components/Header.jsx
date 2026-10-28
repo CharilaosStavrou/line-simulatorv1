@@ -7,7 +7,7 @@ import NumberField from './NumberField.jsx'
 const defaultInterarrival = { type: 'exponential', mean: 7 }
 
 // App title and the run settings: duration, warm-up, replications, seed, source.
-function Header({ model, onChange }) {
+function Header({ model, onChange, actions }) {
   const sourceId = useId()
   const { settings, source } = model
 
@@ -33,9 +33,12 @@ function Header({ model, onChange }) {
 
   return (
     <header className="appHeader">
-      <div className="appTitle">
-        <h1>Production Line Simulator</h1>
-        <p className="appSubtitle">Discrete-event simulation of a serial line · times in minutes</p>
+      <div className="headerTop">
+        <div className="appTitle">
+          <h1>Production Line Simulator</h1>
+          <p className="appSubtitle">Discrete-event simulation of a serial line · times in minutes</p>
+        </div>
+        {actions}
       </div>
       <div className="settingsRow">
         {settingField('simulationHours', 'Simulation', { unit: 'h' })}

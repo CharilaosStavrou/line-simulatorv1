@@ -109,3 +109,74 @@ describe('niceTicks', () => {
     expect(niceTicks(0.9, 5)).toEqual([0, 0.2, 0.4, 0.6, 0.8, 1])
   })
 })
+
+import { modelToJson, parseModelFile } from '../src/lib/modelFile.js'
+import { createSampleModel } from '../src/data/sampleModel.js'
+import { createNewModel } from '../src/data/newModel.js'
+
+describe('model files', () => {
+  it('round-trips a model through export and import', () => {
+    const model = createSampleModel()
+    expect(parseModelFile(modelToJson(model))).toEqual({ model })
+  })
+
+  it('accepts a bare model object', () => {
+    const model = createNewModel()
+    expect(parseModelFile(JSON.stringify(model))).toEqual({ model })
+  })
+
+  it('gives clear errors for broken, foreign or invalid files', () => {
+    expect(parseModelFile('{ not json').error).toMatch(/not valid JSON/)
+    expect(parseModelFile(JSON.stringify({ format: 'other', version: 1 })).error).toMatch(/not a Production Line/)
+    expect(parseModelFile(JSON.stringify({ format: 'line-simulator-model', version: 9 })).error).toMatch(/version/)
+    const broken = createSampleModel()
+    broken.stations[0].mttr = -1
+    broken.buffers.pop()
+    const result = parseModelFile(modelToJson(broken))
+    expect(result.model).toBeUndefined()
+    expect(result.error).toMatch(/Station 1 MTTR/)
+    expect(result.error).toMatch(/one buffer between/)
+  })
+
+  it('sample and new models are valid', () => {
+    expect(validateModel(createSampleModel())).toEqual([])
+    expect(validateModel(createNewModel())).toEqual([])
+  })
+})
+
+import { createScenario, maxScenarios, saveBlockedReason } from '../src/lib/scenarios.js'
+
+describe('scenarios', () => {
+  const result = {
+    replicationCount: 3,
+    throughputPerHour: { mean: 10, halfWidth: 0.2, n: 3 },
+    averageWip: { mean: 5, halfWidth: 0.1, n: 3 },
+    averageCycleTime: { mean: 30, halfWidth: 1, n: 3 },
+    bottleneck: { name: 'Welding', activePercent: 95, index: 2 },
+    wipOverTime: [{ time: 1, wip: 2 }],
+  }
+
+  it('stores only the main results with the model', () => {
+    const model = createSampleModel()
+    const scenario = createScenario('Base', model, result)
+    expect(scenario.name).toBe('Base')
+    expect(scenario.model).toBe(model)
+    expect(scenario.summary).toEqual({
+      replicationCount: 3,
+      throughputPerHour: result.throughputPerHour,
+      averageWip: result.averageWip,
+      averageCycleTime: result.averageCycleTime,
+      bottleneck: { name: 'Welding', activePercent: 95 },
+    })
+    expect(createScenario('Other', model, result).id).not.toBe(scenario.id)
+  })
+
+  it('allows saving only a result of the current model, up to the maximum', () => {
+    const model = createSampleModel()
+    expect(saveBlockedReason({ result: null, resultModel: null, model, scenarios: [] })).toMatch(/Run/)
+    expect(saveBlockedReason({ result, resultModel: createSampleModel(), model, scenarios: [] })).toMatch(/changed/)
+    expect(saveBlockedReason({ result, resultModel: model, model, scenarios: [] })).toBeNull()
+    const full = Array.from({ length: maxScenarios }, (_, i) => ({ id: String(i) }))
+    expect(saveBlockedReason({ result, resultModel: model, model, scenarios: full })).toMatch(/At most 4/)
+  })
+})

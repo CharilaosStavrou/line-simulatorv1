@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const initialState = { status: 'idle', progress: 0, result: null, error: null }
+const initialState = { status: 'idle', progress: 0, result: null, resultModel: null, error: null }
 
-// Runs the model in a Web Worker and tracks progress and the latest result.
+// Runs the model in a Web Worker and tracks progress, the latest result and
+// the model that produced it.
 export function useSimulation() {
   const [state, setState] = useState(initialState)
   const workerRef = useRef(null)
@@ -20,7 +21,7 @@ export function useSimulation() {
       if (message.type === 'progress') {
         setState((previous) => ({ ...previous, progress: message.fraction }))
       } else if (message.type === 'result') {
-        setState({ status: 'done', progress: 1, result: message.result, error: null })
+        setState({ status: 'done', progress: 1, result: message.result, resultModel: model, error: null })
         worker.terminate()
       } else if (message.type === 'error') {
         setState((previous) => ({ ...previous, status: 'error', error: message.message }))

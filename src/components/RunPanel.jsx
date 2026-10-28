@@ -1,10 +1,10 @@
 // Run button with a progress bar and error display.
-function RunPanel({ status, progress, error, onRun }) {
+function RunPanel({ status, progress, replications, error, onRun }) {
   const running = status === 'running'
   return (
     <section className="runPanel" aria-live="polite">
       <button type="button" className="button buttonPrimary" onClick={onRun} disabled={running}>
-        {running ? 'Running…' : 'Run simulation'}
+        {running ? 'Running…' : `Run simulation (${replications} replication${replications === 1 ? '' : 's'})`}
       </button>
       {running && (
         <div className="progress">
