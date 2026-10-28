@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { confidenceInterval, tQuantile975 } from '../../src/sim/confidence.js'
 import { simulateLine } from '../../src/sim/line.js'
+import { createRandom, sample } from '../../src/sim/random.js'
 import { runReplications } from '../../src/sim/replications.js'
 import { buildModel, constant, exponential, triangular } from './helpers.js'
 
@@ -27,7 +28,21 @@ describe('confidenceInterval', () => {
     expect(confidenceInterval([null, 2, 4]).mean).toBe(3)
   })
 
-  it('covers the true mean about 95% of the time', () => {
+  it('covers the true mean 95% of the time for normal data', () => {
+    // 4000 intervals from 5 normal(10, 2) values each; the sampling error of
+    // the coverage estimate is about 0.35 percentage points.
+    const rng = createRandom(31)
+    const trials = 4000
+    let covered = 0
+    for (let t = 0; t < trials; t++) {
+      const values = Array.from({ length: 5 }, () => sample({ type: 'normal', mean: 10, sd: 2 }, rng))
+      const ci = confidenceInterval(values)
+      if (Math.abs(ci.mean - 10) <= ci.halfWidth) covered++
+    }
+    expect(Math.abs(covered / trials - 0.95)).toBeLessThan(0.012)
+  })
+
+  it('covers the true mean about 95% of the time even for skewed data', () => {
     // 2000 intervals from 5 exponential samples each (mean 1): coverage of a
     // t interval for skewed data is a little below 95%, but well above 85%.
     let seed = 12345
