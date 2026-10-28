@@ -29,6 +29,7 @@
 
 import { createEngine } from './engine.js'
 import { createLineStatistics } from './lineStatistics.js'
+import { stationState, takeSnapshot } from './lineSnapshot.js'
 import { createRandom, sample, sampleExponential } from './random.js'
 
 const minutesPerHour = 60
@@ -45,13 +46,6 @@ function checkModel(model) {
   if (source.type !== 'alwaysAvailable' && source.type !== 'interarrival') {
     throw new Error(`Unknown source type: ${source.type}`)
   }
-}
-
-export function stationState(station) {
-  if (station.isDown) return 'down'
-  if (station.phase === 'processing') return 'busy'
-  if (station.phase === 'finished') return 'blocked'
-  return 'starved'
 }
 
 export function createLineSimulation(model, options = {}) {
@@ -262,22 +256,12 @@ export function createLineSimulation(model, options = {}) {
     getResults() {
       return stats.summary(engine.now)
     },
-    // Current state of the line for the animation. Part lists are cut to
-    // maxParts entries (front of the queue first); counts are complete.
-    getSnapshot(maxParts = 50) {
-      const ids = (parts) => parts.slice(0, maxParts).map((part) => part.id)
-      return {
-        time: engine.now,
-        stations: stations.map((station) => ({ state: stationState(station), partId: station.part?.id ?? null })),
-        buffers: buffers.map((buffer) => ({
-          capacity: buffer.capacity,
-          count: buffer.parts.length,
-          partIds: ids(buffer.parts),
-        })),
-        inputQueue: { count: inputQueue.length, partIds: ids(inputQueue) },
-        wip: wipCount,
-        finished: finishedCount,
-      }
+    // State of the line for the animation (see lineSnapshot.js).
+    getSnapshot(maxParts) {
+      return takeSnapshot(
+        { time: engine.now, stations, buffers, inputQueue, wipCount, finishedCount },
+        maxParts,
+      )
     },
   }
 }
