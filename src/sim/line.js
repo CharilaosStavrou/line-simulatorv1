@@ -263,7 +263,18 @@ export function createLineSimulation(model, options = {}) {
   }
 }
 
-// Runs one replication of the model and returns its results.
+// Runs one replication of the model and returns its results. The optional
+// onProgress callback receives the completed fraction (0 to 1) in steps.
 export function simulateLine(model, options = {}) {
-  return createLineSimulation(model, options).runToEnd()
+  const line = createLineSimulation(model, options)
+  const { onProgress, progressSteps = 50 } = options
+  if (onProgress) {
+    for (let k = 1; k < progressSteps; k++) {
+      line.runUntil((line.endTime * k) / progressSteps)
+      onProgress(k / progressSteps)
+    }
+  }
+  const results = line.runToEnd()
+  onProgress?.(1)
+  return results
 }

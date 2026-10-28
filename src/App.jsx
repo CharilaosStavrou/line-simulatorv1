@@ -1,11 +1,40 @@
+import { useState } from 'react'
+import Header from './components/Header.jsx'
+import LineEditor from './components/LineEditor.jsx'
+import ResultsPanel from './components/ResultsPanel.jsx'
+import RunPanel from './components/RunPanel.jsx'
+import { createDefaultModel } from './data/defaultModel.js'
+import { useSimulation } from './lib/useSimulation.js'
+import { validateModel } from './lib/validation.js'
+
 function App() {
+  const [model, setModel] = useState(createDefaultModel)
+  const [runModel, setRunModel] = useState(null)
+  const [modelError, setModelError] = useState(null)
+  const simulation = useSimulation()
+
+  function handleRun() {
+    const errors = validateModel(model)
+    setModelError(errors.length > 0 ? errors.join('; ') : null)
+    if (errors.length > 0) return
+    setRunModel(model)
+    simulation.run(model)
+  }
+
   return (
     <div className="app">
-      <header className="appHeader">
-        <h1>Production Line Simulator</h1>
-      </header>
+      <Header model={model} onChange={setModel} />
       <main className="appMain">
-        <p>Simulation core is in place. The model editor arrives in Phase 3.</p>
+        <LineEditor model={model} onChange={setModel} />
+        <RunPanel
+          status={simulation.status}
+          progress={simulation.progress}
+          error={modelError ?? simulation.error}
+          onRun={handleRun}
+        />
+        {simulation.result && runModel && (
+          <ResultsPanel result={simulation.result} warmupHours={runModel.settings.warmupHours} />
+        )}
       </main>
     </div>
   )

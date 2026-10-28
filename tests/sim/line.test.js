@@ -64,3 +64,14 @@ describe('line simulation mechanics', () => {
     ).toThrow()
   })
 })
+
+describe('simulateLine progress', () => {
+  it('reports increasing progress ending at 1 and gives the same result as without', () => {
+    const model = buildModel({ stations: [[exponential(4)], [constant(3)]], buffers: [2] })
+    const fractions = []
+    const withProgress = simulateLine(model, { onProgress: (f) => fractions.push(f) })
+    expect(fractions.at(-1)).toBe(1)
+    expect(fractions.every((f, i) => i === 0 || f > fractions[i - 1])).toBe(true)
+    expect(withProgress).toEqual(simulateLine(model))
+  })
+})
