@@ -1,4 +1,6 @@
 import { formatNumber } from '../lib/numbers.js'
+import BufferTable from './BufferTable.jsx'
+import CapacityNotice from './CapacityNotice.jsx'
 import StationStateChart from './StationStateChart.jsx'
 import WipChart from './WipChart.jsx'
 
@@ -15,7 +17,8 @@ function Kpi({ label, value, unit }) {
 }
 
 // Main results of a run, the Little's law check and the charts.
-function ResultsPanel({ result, warmupHours }) {
+function ResultsPanel({ result, model }) {
+  const { warmupHours } = model.settings
   const littleWip = (result.throughputPerHour / 60) * (result.averageCycleTime ?? 0)
   const difference = result.averageWip > 0 ? Math.abs(result.averageWip - littleWip) / result.averageWip : 0
   const littleOk = difference <= littleTolerance
@@ -29,6 +32,7 @@ function ResultsPanel({ result, warmupHours }) {
           {result.partsFinished} parts finished
         </span>
       </div>
+      <CapacityNotice model={model} />
       <div className="kpiRow">
         <Kpi label="Throughput" value={formatNumber(result.throughputPerHour)} unit="parts/h" />
         <Kpi label="Average WIP" value={formatNumber(result.averageWip)} unit="parts" />
@@ -43,7 +47,10 @@ function ResultsPanel({ result, warmupHours }) {
         {formatNumber(difference * 100, 1)}%{littleOk ? '' : ', the run may be too short'})
       </div>
       <div className="chartGrid">
-        <StationStateChart stations={result.stations} bottleneckIndex={result.bottleneck.index} />
+        <div>
+          <StationStateChart stations={result.stations} bottleneckIndex={result.bottleneck.index} />
+          <BufferTable buffers={result.buffers} stations={result.stations} />
+        </div>
         <WipChart points={result.wipOverTime} averageWip={result.averageWip} startMinutes={warmupHours * 60} />
       </div>
     </section>

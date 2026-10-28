@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import CapacityNotice from './components/CapacityNotice.jsx'
 import Header from './components/Header.jsx'
 import LineEditor from './components/LineEditor.jsx'
 import ResultsPanel from './components/ResultsPanel.jsx'
@@ -26,6 +27,7 @@ function App() {
       <Header model={model} onChange={setModel} />
       <main className="appMain">
         <LineEditor model={model} onChange={setModel} />
+        <CapacityNotice model={model} />
         <RunPanel
           status={simulation.status}
           progress={simulation.progress}
@@ -33,7 +35,7 @@ function App() {
           onRun={handleRun}
         />
         {simulation.result && runModel && (
-          <ResultsPanel result={simulation.result} warmupHours={runModel.settings.warmupHours} />
+          <ResultsPanel result={simulation.result} model={runModel} />
         )}
       </main>
     </div>

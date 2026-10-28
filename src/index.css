@@ -449,6 +449,54 @@ button:focus-visible {
   font-size: 12px;
 }
 
+.notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 3px solid;
+  font-size: 13px;
+}
+
+.noticeWarn {
+  border-color: var(--colorBlocked);
+  background: var(--colorWarnSoft);
+}
+
+.panel .noticeWarn {
+  margin-bottom: 12px;
+}
+
+.dataTable {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dataTable caption {
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--colorBorder);
+  text-align: right;
+}
+
+.dataTable th:first-child {
+  font-weight: 400;
+  text-align: left;
+}
+
+.dataTable thead th {
+  border-bottom-color: var(--colorLine);
+  color: var(--colorTextMuted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .littleCheck {
   margin-top: 12px;
   padding: 8px 12px;
