@@ -1,21 +1,48 @@
 // Seeded pseudo-random numbers and sampling from the supported distributions.
 // All times are in the model's time unit (minutes).
 
-// Mulberry32: a small, fast 32-bit generator with good statistical quality
-// for simulation use. Returns a function giving uniform numbers in [0, 1).
+// Mulberry32: a small 32-bit generator. It is used only to expand the user's
+// seed into the 128-bit state of the main generator below. On its own its
+// cycle (2^32) is too short: the streams of nearby seeds (seed, seed + 1, ...)
+// start only a few hundred thousand draws apart, so long replications with
+// consecutive seeds would overlap.
 export function mulberry32(seed) {
   let state = seed >>> 0
-  return function next() {
+  return function nextUint32() {
     state = (state + 0x6d2b79f5) >>> 0
     let t = state
     t = Math.imul(t ^ (t >>> 15), t | 1)
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    return (t ^ (t >>> 14)) >>> 0
   }
 }
 
+function rotl(x, k) {
+  return (x << k) | (x >>> (32 - k))
+}
+
+// xoshiro128** (Blackman and Vigna): period 2^128 - 1, so the streams of
+// different seeds never overlap in practice. Returns a function giving
+// uniform numbers in [0, 1) with 32-bit resolution.
 export function createRandom(seed) {
-  return mulberry32(seed)
+  const seeder = mulberry32(seed)
+  let s0 = seeder()
+  let s1 = seeder()
+  let s2 = seeder()
+  let s3 = seeder()
+  if ((s0 | s1 | s2 | s3) === 0) s0 = 1 // the all-zero state is invalid
+
+  return function next() {
+    const result = Math.imul(rotl(Math.imul(s1, 5), 7), 9) >>> 0
+    const t = s1 << 9
+    s2 ^= s0
+    s3 ^= s1
+    s1 ^= s2
+    s0 ^= s3
+    s2 ^= t
+    s3 = rotl(s3, 11)
+    return result / 4294967296
+  }
 }
 
 export const distributionTypes = ['constant', 'uniform', 'triangular', 'normal', 'exponential']

@@ -66,6 +66,25 @@ describe('random generator', () => {
     expect(same).toBe(0)
   })
 
+  it('gives uncorrelated sequences for consecutive seeds', () => {
+    const n = 100000
+    const a = createRandom(500)
+    const b = createRandom(501)
+    let sumAb = 0
+    let sumA = 0
+    let sumB = 0
+    for (let i = 0; i < n; i++) {
+      const x = a()
+      const y = b()
+      sumAb += x * y
+      sumA += x
+      sumB += y
+    }
+    const covariance = sumAb / n - (sumA / n) * (sumB / n)
+    const correlation = covariance / (1 / 12)
+    expect(Math.abs(correlation)).toBeLessThan(0.015)
+  })
+
   it('returns numbers in [0, 1) with mean 1/2 and variance 1/12', () => {
     const rng = createRandom(7)
     let sum = 0
