@@ -20,6 +20,20 @@ describe('validation against theory', () => {
     expect(result.stations[1].percentBusy).toBeCloseTo(100, 9)
   })
 
+  it('deterministic line with large buffers: the tie with station 1 goes to station 2', () => {
+    // Stations 1 and 2 are both 100% busy; station 2 has the longer
+    // effective processing time (8 vs 5 minutes).
+    const model = buildModel({
+      stations: [[constant(5)], [constant(8)], [constant(6)]],
+      buffers: [1000, 1000],
+      warmupHours: 1,
+      simulationHours: 101,
+    })
+    const result = simulateLine(model)
+    expect(result.stations[0].percentBusy).toBeCloseTo(100, 9)
+    expect(result.bottleneck.name).toBe('Station 2')
+  })
+
   it('deterministic line with buffers that fill up: the slowest station is the bottleneck', () => {
     // With unlimited raw material and buffers that never fill, station 1 is
     // never starved or blocked and ties with the true bottleneck at 100%

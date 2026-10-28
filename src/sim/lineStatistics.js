@@ -1,6 +1,7 @@
 // Collects the statistics of a line run. Everything is reset at the end of
 // the warm-up period, so results describe only the measurement period.
 
+import { distributionMean } from './random.js'
 import { createStateTimer, createTimeWeighted } from './statistics.js'
 
 export const stationStates = ['busy', 'starved', 'blocked', 'down']
@@ -11,14 +12,37 @@ export const stationStates = ['busy', 'starved', 'blocked', 'down']
 // station and cannot be the constraint. The station with the highest share of
 // active time constrains the line most. Unlike plain utilisation this counts
 // breakdowns, so an unreliable machine with moderate busy time is still found.
-// Ties go to the most upstream station.
-export function findBottleneck(stationResults) {
+//
+// Ties (within tieTolerance percentage points) are broken by the highest mean
+// effective processing time, mean processing time / availability, i.e. the
+// station with the lowest long-run capacity. A tie happens for example with
+// unlimited raw material and buffers that never fill: station 1 is then never
+// starved or blocked and is 100% active like the true bottleneck. Any
+// remaining tie goes to the most upstream station.
+const tieTolerance = 1e-6
+
+export function effectiveProcessingTime(station) {
+  const fails = station.mtbf > 0 && station.mttr > 0
+  const availability = fails ? station.mtbf / (station.mtbf + station.mttr) : 1
+  return distributionMean(station.processingTime) / availability
+}
+
+export function findBottleneck(stationResults, stationConfigs) {
   let best = null
   stationResults.forEach((station, index) => {
-    const activePercent = station.percentBusy + station.percentDown
-    if (!best || activePercent > best.activePercent + 1e-9) {
-      best = { index, id: station.id, name: station.name, activePercent }
+    const candidate = {
+      index,
+      id: station.id,
+      name: station.name,
+      activePercent: station.percentBusy + station.percentDown,
+      effectiveTime: effectiveProcessingTime(stationConfigs[index]),
     }
+    const isBetter =
+      !best ||
+      candidate.activePercent > best.activePercent + tieTolerance ||
+      (candidate.activePercent >= best.activePercent - tieTolerance &&
+        candidate.effectiveTime > best.effectiveTime)
+    if (isBetter) best = candidate
   })
   return best
 }
@@ -101,7 +125,7 @@ export function createLineStatistics({ stations, buffers, startTime = 0 }) {
         averageLevel: bufferLevels[i].mean(now),
         percentFull: buffer.capacity > 0 ? 100 * bufferFull[i].mean(now) : null,
       })),
-      bottleneck: findBottleneck(stationResults),
+      bottleneck: findBottleneck(stationResults, stations),
       wipOverTime: [...wipOverTime],
     }
   }

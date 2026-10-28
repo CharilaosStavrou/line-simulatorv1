@@ -91,6 +91,42 @@ export function sampleExponential(rng, mean) {
   return -mean * Math.log(1 - rng())
 }
 
+// Standard normal density and CDF (Abramowitz and Stegun 7.1.26, error < 1.5e-7).
+export function normalPdf(x) {
+  return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI)
+}
+
+export function normalCdf(x) {
+  const z = Math.abs(x) / Math.SQRT2
+  const t = 1 / (1 + 0.3275911 * z)
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))))
+  const erf = 1 - poly * Math.exp(-z * z)
+  return x >= 0 ? 0.5 * (1 + erf) : 0.5 * (1 - erf)
+}
+
+// Theoretical mean of a distribution. For the normal it is the mean of the
+// distribution truncated at 0, which is what sampleTruncatedNormal draws from.
+export function distributionMean(distribution) {
+  const d = distribution
+  switch (d.type) {
+    case 'constant':
+      return d.value
+    case 'uniform':
+      return (d.min + d.max) / 2
+    case 'triangular':
+      return (d.min + d.mode + d.max) / 3
+    case 'normal': {
+      if (d.sd === 0) return Math.max(0, d.mean)
+      const alpha = -d.mean / d.sd
+      return d.mean + (d.sd * normalPdf(alpha)) / (1 - normalCdf(alpha))
+    }
+    case 'exponential':
+      return d.mean
+    default:
+      throw new Error(`Unknown distribution type: ${d.type}`)
+  }
+}
+
 // Draws one value from a distribution object such as
 // { type: 'triangular', min: 2, mode: 3, max: 5 }.
 export function sample(distribution, rng) {

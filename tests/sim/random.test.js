@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRandom, sample } from '../../src/sim/random.js'
+import { createRandom, distributionMean, normalCdf, normalPdf, sample } from '../../src/sim/random.js'
 
 const sampleCount = 100000
 
@@ -27,19 +27,6 @@ function expectMoments(distribution, theory) {
   expect(Math.abs(result.mean - theory.mean)).toBeLessThan(4 * standardError)
   expect(Math.abs(result.variance - theory.variance) / theory.variance).toBeLessThan(0.03)
   return result
-}
-
-// Standard normal density and CDF (Abramowitz and Stegun 7.1.26, error < 1.5e-7).
-function normalPdf(x) {
-  return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI)
-}
-
-function normalCdf(x) {
-  const z = Math.abs(x) / Math.SQRT2
-  const t = 1 / (1 + 0.3275911 * z)
-  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))))
-  const erf = 1 - poly * Math.exp(-z * z)
-  return x >= 0 ? 0.5 * (1 + erf) : 0.5 * (1 - erf)
 }
 
 // Mean and variance of a normal(mean, sd) truncated to [0, inf).
@@ -145,6 +132,15 @@ describe('distributions (100,000 samples vs theory)', () => {
   it('exponential (mean 8): mean 8, variance 64', () => {
     const result = expectMoments({ type: 'exponential', mean: 8 }, { mean: 8, variance: 64 })
     expect(result.min).toBeGreaterThanOrEqual(0)
+  })
+
+  it('distributionMean gives the theoretical mean of each type', () => {
+    expect(distributionMean({ type: 'constant', value: 4 })).toBe(4)
+    expect(distributionMean({ type: 'uniform', min: 2, max: 8 })).toBe(5)
+    expect(distributionMean({ type: 'triangular', min: 1, mode: 3, max: 8 })).toBe(4)
+    expect(distributionMean({ type: 'normal', mean: 10, sd: 2 })).toBeCloseTo(10, 4)
+    expect(distributionMean({ type: 'normal', mean: 1, sd: 2 })).toBeCloseTo(truncatedNormalTheory(1, 2).mean, 12)
+    expect(distributionMean({ type: 'exponential', mean: 8 })).toBe(8)
   })
 
   it('throws for an unknown distribution type', () => {
